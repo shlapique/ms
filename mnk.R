@@ -28,6 +28,7 @@ x_4 <- x_3*x
 # put all vector and matricies in one expression
 data <- c(rep(1, 40), x, x_2, x_3)
 x_main <- matrix(data, nrow=40, ncol=4)
+xm_t = x_main%*%theta
 y_res <- (x_main%*%theta) + e
 #y_res
 
@@ -83,9 +84,58 @@ for(i in c(0.95, 0.99))
 #3
 #=====
 
-sympy("phi_th = th[1][1]")
+phi_th = th[1][1]
 for(i in nrow(th))
 {
     phi_th <- phi_th + i * x**(i + 1)
     print(phi_th)
 }
+
+#TODO
+
+#=====
+#4
+#=====
+#X11()
+#plot(1, 3)
+#plot(x_main, xm_t)
+#Sys.sleep(Inf)
+
+#=====
+#5
+#=====
+E_max = max(E) + 0.01
+E_min = min(E) - 0.01
+l = 7
+delta <- (E_max - E_min)/(l-1)
+print(paste("E_min = ", E_min, "E_max = ", E_max, "delta = ", delta))
+
+t_interval = seq(from = E_min, to = E_max + delta, by = delta)
+#t_interval
+fs = c()
+for(i in (length(t_interval) - 2))
+{
+    c = 0
+    for(ep in E)
+    {
+        if((t_interval[i] <= ep) & (ep < t_interval[i + 1]))
+        {
+            c <- c + 1
+            print(c)
+        }
+    }
+    fs <- c(fs, c / (n * (t_interval[i + 1] - t_interval[i])))
+}
+print(fs)
+
+
+#=====
+#6
+#=====
+# estimate disp
+est_sigm = sqrt(1 / n * norm_E^2)
+#est_sigm^2
+
+#=====
+#7
+#=====
