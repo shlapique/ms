@@ -1,4 +1,4 @@
-#!/usr/bin/env Rscript
+library(tidyverse)
 
 #=====
 #0
@@ -112,21 +112,22 @@ print(paste("E_min = ", E_min, "E_max = ", E_max, "delta = ", delta))
 
 t_interval = seq(from = E_min, to = E_max + delta, by = delta)
 #t_interval
+
 fs = c()
-for(i in (length(t_interval) - 2))
+for(i in 1:(length(t_interval) - 2))
 {
-    c = 0
+    c <- 0
     for(ep in E)
     {
         if((t_interval[i] <= ep) & (ep < t_interval[i + 1]))
         {
             c <- c + 1
-            print(c)
         }
     }
     fs <- c(fs, c / (n * (t_interval[i + 1] - t_interval[i])))
 }
 print(fs)
+
 
 
 #=====
