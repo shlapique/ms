@@ -1,5 +1,10 @@
 library(tidyverse)
 
+check_device <- function()
+{
+    while (!is.null(dev.list())) Sys.sleep(1)
+}
+
 #=====
 #0
 #=====
@@ -110,7 +115,7 @@ l = 7
 delta <- (E_max - E_min)/(l-1)
 print(paste("E_min = ", E_min, "E_max = ", E_max, "delta = ", delta))
 
-t_interval = seq(from = E_min, to = E_max + delta, by = delta)
+t_interval = seq(E_min, E_max + delta, delta)
 #t_interval
 
 fs = c()
@@ -128,13 +133,23 @@ for(i in 1:(length(t_interval) - 2))
 }
 print(fs)
 
+data <- data.frame(E)
+#data
 
+x <- seq(-4, 4, 0.1)
+tmp <- dnorm(x, mean(E), sd(E))
+p <- data.frame(tmp)
+
+X11()
+ggplot() + geom_histogram(data, mapping = aes(E, after_stat(density)), bins=l) + geom_line(p, mapping = aes(x, tmp))
+check_device()
 
 #=====
 #6
 #=====
+
 # estimate disp
-est_sigm = sqrt(1 / n * norm_E^2)
+est_sigm <- sqrt(1 / n * norm_E^2)
 #est_sigm^2
 
 #=====
