@@ -5,6 +5,34 @@ check_device <- function()
     while (!is.null(dev.list())) Sys.sleep(1)
 }
 
+fisher_criterion <- function(n, x, y_res)
+{
+    x_data <- c(rep(1, n), x)
+    for(m_lid in 2:10)
+    {
+        x_data <- c(x_data, x^m_lid)
+        X <- matrix(x_data, nrow=n, ncol=m_lid + 1)
+        th_lid <- ((solve(t(X)%*%X))%*%t(X))%*%y_res
+        alpha_s <- solve(t(X)%*%X)
+        al_1_1_s <- alpha_s[nrow(alpha_s), ncol(alpha_s)]
+        E_lid <- y_res - X%*%th_lid
+        norm_E_lid <- sqrt(sum(E_lid**2))
+        t_lid = th_lid[nrow(th_lid), 1] * sqrt(40 - m_lid - 1) / (sqrt(al_1_1_s) * norm_E_lid)
+        left_lid <- qt(.025/2, n - m_lid - 1)
+        right_lid <- -qt(.025/2, n - m_lid - 1)
+        if((t_lid > left_lid) & (t_lid < right_lid))
+        {
+            print("INSIDE INTERVAL!")
+            print(paste(left_lid, "<", t_lid, "<", right_lid))
+            print(paste("=> solved m with lid = m_lid - 1 = ", m_lid - 1))
+            X <- X[, -ncol(X)]
+            print(X)
+            return (m_lid - 1)
+            break
+        }
+    }
+}
+
 #=====
 #0
 #=====
@@ -17,7 +45,8 @@ m = 3
 theta = c((-1)^11 * 11, 5, 6, 0.06)
 
 # set error vector with normal distribution
-e <- rnorm(n = n, mean = 0, sd = sigm)
+e <- rnorm(n, 0, sigm)
+
 
 # set up x's
 #x <- matrix(rep(1, n), nrow=n, ncol=1)
@@ -33,7 +62,6 @@ x_4 <- x_3*x
 # put all vector and matricies in one expression
 data <- c(rep(1, 40), x, x_2, x_3)
 x_main <- matrix(data, nrow=40, ncol=4)
-xm_t = x_main%*%theta
 y_res <- (x_main%*%theta) + e
 #y_res
 
@@ -42,32 +70,28 @@ y_res <- (x_main%*%theta) + e
 #=====
 
 #m = 2   #по итогу theta 5 равно 0, поэтому в гипотезе мы делаем шаг назад и говорим, что число неизвестных(theta) = 4, а число степеней x равно 4-1=3
-data_2 <- c(rep(1, 40), x, x_2, x_3, x_4)
-x_main_2 <- matrix(data_2, nrow=40, ncol=5)
-x_main_2 <- x_main_2[, -5]
-#x_main_2
 
-# Tetha' = (X^T * X)^-1 * X^T * Y
-# theta with lid 
-th <- ((solve(t(x_main_2)%*%x_main_2))%*%t(x_main_2))%*%y_res
-th
-
-alpha <- solve(t(x_main_2)%*%x_main_2)
-#alpha
-al_1_1 <- alpha[4, 4]
-#al_1_1
-
-E <- y_res - x_main_2%*%th
-#E
-norm_E <- sqrt(sum(E**2))
-#norm_E
-
-t = th[nrow(th), 1] * sqrt(40 - m - 1) / (sqrt(al_1_1) * norm_E)
-#t
-
-left <- qt(.025/2, n - m - 1)
-right <- -qt(.025/2, n - m - 1)
-#print(paste(left, "<", t, "<", right))
+# ---------------------------
+m_lid <- fisher_criterion(n, x, y_res)
+print(paste("REAL M = ", m_lid))
+x_data <- c(rep(1, n), x)
+for(em in 2:m_lid)
+{
+    x_data <- c(x_data, x^em)
+    X <- matrix(x_data, nrow=n, ncol=em + 1)
+    # Tetha' = (X^T * X)^-1 * X^T * Y
+    # theta with lid 
+    th_lid <- ((solve(t(X)%*%X))%*%t(X))%*%y_res
+    alpha_s <- solve(t(X)%*%X)
+    al_1_1_s <- alpha_s[nrow(alpha_s), ncol(alpha_s)]
+    E_lid <- y_res - X%*%th_lid
+    norm_E_lid <- sqrt(sum(E_lid**2))
+    t_lid = th_lid[nrow(th_lid), 1] * sqrt(40 - em - 1) / (sqrt(al_1_1_s) * norm_E_lid)
+    left_lid <- qt(.025/2, n - em - 1)
+    right_lid <- -qt(.025/2, n - em - 1)
+    print(paste(left_lid, "<", t_lid, "<", right_lid))
+}
+#----------------------------
 
 #=====
 #2
@@ -75,11 +99,11 @@ right <- -qt(.025/2, n - m - 1)
 
 for(i in c(0.95, 0.99))
 {
-    for(j in 1:nrow(th))
+    for(j in 1:nrow(th_lid))
     {
-        #print(th[j][1] + (qt((1 - i) / 2, n - m - 1) * norm_E) * sqrt(alpha[j, j]))
-        l <- th[j][1] + (qt((1 - i) / 2, n - m - 1) * norm_E * sqrt(alpha[j, j])) / sqrt(n - m - 1)
-        r <- th[j][1] - (qt((1 - i) / 2, n - m - 1) * norm_E * sqrt(alpha[j, j])) / sqrt(n - m - 1)
+        #print(th[j][1] + (qt((1 - i) / 2, n - m - 1) * norm_E_lid) * sqrt(alpha[j, j]))
+        l <- th_lid[j][1] + (qt((1 - i) / 2, n - m_lid - 1) * norm_E_lid * sqrt(alpha_s[j, j])) / sqrt(n - m_lid - 1)
+        r <- th_lid[j][1] - (qt((1 - i) / 2, n - m_lid - 1) * norm_E_lid * sqrt(alpha_s[j, j])) / sqrt(n - m_lid - 1)
         print(paste(l, ", theta=", theta[i], ", ", r))
     }
     print("=============================================")
@@ -89,8 +113,8 @@ for(i in c(0.95, 0.99))
 #3
 #=====
 
-phi_th = th[1][1]
-for(i in nrow(th))
+phi_th = th_lid[1][1]
+for(i in nrow(th_lid))
 {
     phi_th <- phi_th + i * x**(i + 1)
     print(phi_th)
@@ -103,14 +127,13 @@ for(i in nrow(th))
 #=====
 #X11()
 #plot(1, 3)
-#plot(x_main, xm_t)
 #Sys.sleep(Inf)
 
 #=====
 #5
 #=====
-E_max = max(E) + 0.01
-E_min = min(E) - 0.01
+E_max = max(E_lid) + 0.01
+E_min = min(E_lid) - 0.01
 l = 7
 delta <- (E_max - E_min)/(l-1)
 print(paste("E_min = ", E_min, "E_max = ", E_max, "delta = ", delta))
@@ -122,7 +145,7 @@ fs = c()
 for(i in 1:(length(t_interval) - 2))
 {
     c <- 0
-    for(ep in E)
+    for(ep in E_lid)
     {
         if((t_interval[i] <= ep) & (ep < t_interval[i + 1]))
         {
@@ -133,15 +156,16 @@ for(i in 1:(length(t_interval) - 2))
 }
 print(fs)
 
-data <- data.frame(E)
-#data
+data_hist <- data.frame(E_lid)
+#data_hist
 
 x <- seq(-4, 4, 0.1)
-tmp <- dnorm(x, mean(E), sd(E))
+tmp <- dnorm(x, mean(E_lid), sd(E_lid))
 p <- data.frame(tmp)
 
-X11()
-ggplot() + geom_histogram(data, mapping = aes(E, after_stat(density)), bins=l) + geom_line(p, mapping = aes(x, tmp))
+# histogram + line of normal distribution 
+X11() 
+ggplot() + geom_histogram(data_hist, mapping = aes(E_lid, after_stat(density)), bins=l) + geom_line(p, mapping = aes(x, tmp))
 check_device()
 
 #=====
@@ -149,8 +173,8 @@ check_device()
 #=====
 
 # estimate disp
-est_sigm <- sqrt(1 / n * norm_E^2)
-#est_sigm^2
+est_sigm <- sqrt(1 / n * norm_E_lid^2)
+est_sigm^2
 
 #=====
 #7

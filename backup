@@ -1,0 +1,26 @@
+data_2 <- c(rep(1, 40), x, x_2, x_3, x_4)
+x_main_2 <- matrix(data_2, nrow=40, ncol=5)
+x_main_2 <- x_main_2[, -5]
+#x_main_2
+
+# Tetha' = (X^T * X)^-1 * X^T * Y
+# theta with lid 
+th <- ((solve(t(x_main_2)%*%x_main_2))%*%t(x_main_2))%*%y_res
+#th
+
+alpha <- solve(t(x_main_2)%*%x_main_2)
+al_1_1 <- alpha[nrow(alpha), ncol(alpha)]
+al_1_1
+
+E <- y_res - x_main_2%*%th
+#E
+norm_E <- sqrt(sum(E**2))
+#norm_E
+
+t = th[nrow(th), 1] * sqrt(40 - m - 1) / (sqrt(al_1_1) * norm_E)
+#t
+
+left <- qt(.025/2, n - m - 1)
+right <- -qt(.025/2, n - m - 1)
+#print(paste(left, "<", t, "<", right))
+
