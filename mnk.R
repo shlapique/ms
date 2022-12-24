@@ -5,6 +5,7 @@ check_device <- function()
     while (!is.null(dev.list())) Sys.sleep(1)
 }
 
+# returns m_lid 
 fisher_criterion <- function(n, x, y_res)
 {
     x_data <- c(rep(1, n), x)
@@ -57,7 +58,6 @@ for(i in 1:n)
 }
 x_2 <- x*x
 x_3 <- x_2*x 
-x_4 <- x_3*x
 
 # put all vector and matricies in one expression
 data <- c(rep(1, 40), x, x_2, x_3)
@@ -79,6 +79,7 @@ for(em in 2:m_lid)
 {
     x_data <- c(x_data, x^em)
     X <- matrix(x_data, nrow=n, ncol=em + 1)
+
     # Tetha' = (X^T * X)^-1 * X^T * Y
     # theta with lid 
     th_lid <- ((solve(t(X)%*%X))%*%t(X))%*%y_res
@@ -159,7 +160,7 @@ print(fs)
 data_hist <- data.frame(E_lid)
 #data_hist
 
-x <- seq(-4, 4, 0.1)
+x <- seq(-5, 5, 0.1)
 tmp <- dnorm(x, mean(E_lid), sd(E_lid))
 p <- data.frame(tmp)
 
@@ -179,3 +180,30 @@ est_sigm^2
 #=====
 #7
 #=====
+p_hist <- c()
+for(i in 1:(l-1))
+{
+    p_hist <- c(p_hist, fs[i] * delta)
+}
+
+summ <- 0 
+i <- 1
+prob <- 0
+for(p_lid in p_hist)
+{
+    p <- pnorm(t_interval[i + 1] / est_sigm) - pnorm(t_interval[i] / est_sigm)
+    print(paste("P = ", p))
+    prob <- prob + p
+    summ <- summ + ((p_lid - p) ^ 2) / p
+    i <- i + 1
+}
+print(summ * 40)
+
+summ <- summ + pnorm(t_interval[1] / est_sigm)
+prob <- prob + pnorm(t_interval[1] / est_sigm)
+summ <- summ + 1 - pnorm(t_interval[length(t_interval)] / est_sigm)
+prob <- prob + 1 - pnorm(t_interval[length(t_interval)] / est_sigm)
+summ <- summ * n
+print(paste("SUMMM = ", summ))
+
+print(paste("0 < ", summ, " < ", qchisq(.95, l-1)))
