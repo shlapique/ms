@@ -1,6 +1,6 @@
 ## math. stat. paper on "least square method"
 
-used [tidyverse](https://tidyverse.tidyverse.org/) package just for fun *(for pretty graphics and hist's)*, mb
+used **ggplot2** for plotting and pretty graph's, **Ryacas** for symbolic algebra
 
 ### how to install all packages?
 
