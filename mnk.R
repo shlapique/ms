@@ -1,4 +1,5 @@
 library(tidyverse)
+library(caracas)
 
 check_device <- function()
 {
@@ -18,7 +19,7 @@ fisher_criterion <- function(n, x, y_res)
         al_1_1_s <- alpha_s[nrow(alpha_s), ncol(alpha_s)]
         E_lid <- y_res - X%*%th_lid
         norm_E_lid <- sqrt(sum(E_lid**2))
-        t_lid = th_lid[nrow(th_lid), 1] * sqrt(40 - m_lid - 1) / (sqrt(al_1_1_s) * norm_E_lid)
+        t_lid = th_lid[nrow(th_lid), 1] * sqrt(n - m_lid - 1) / (sqrt(al_1_1_s) * norm_E_lid)
         left_lid <- qt(.025/2, n - m_lid - 1)
         right_lid <- -qt(.025/2, n - m_lid - 1)
         if((t_lid > left_lid) & (t_lid < right_lid))
@@ -60,17 +61,14 @@ x_2 <- x*x
 x_3 <- x_2*x 
 
 # put all vector and matricies in one expression
-data <- c(rep(1, 40), x, x_2, x_3)
-x_main <- matrix(data, nrow=40, ncol=4)
+data <- c(rep(1, n), x, x_2, x_3)
+x_main <- matrix(data, nrow=n, ncol=4)
 y_res <- (x_main%*%theta) + e
 #y_res
 
 #=====
 #1
 #=====
-
-#m = 2   #по итогу theta 5 равно 0, поэтому в гипотезе мы делаем шаг назад и говорим, что число неизвестных(theta) = 4, а число степеней x равно 4-1=3
-
 # ---------------------------
 m_lid <- fisher_criterion(n, x, y_res)
 print(paste("REAL M = ", m_lid))
@@ -87,7 +85,7 @@ for(em in 2:m_lid)
     al_1_1_s <- alpha_s[nrow(alpha_s), ncol(alpha_s)]
     E_lid <- y_res - X%*%th_lid
     norm_E_lid <- sqrt(sum(E_lid**2))
-    t_lid = th_lid[nrow(th_lid), 1] * sqrt(40 - em - 1) / (sqrt(al_1_1_s) * norm_E_lid)
+    t_lid = th_lid[nrow(th_lid), 1] * sqrt(n - em - 1) / (sqrt(al_1_1_s) * norm_E_lid)
     left_lid <- qt(.025/2, n - em - 1)
     right_lid <- -qt(.025/2, n - em - 1)
     print(paste(left_lid, "<", t_lid, "<", right_lid))
@@ -97,7 +95,6 @@ for(em in 2:m_lid)
 #=====
 #2
 #=====
-
 for(i in c(0.95, 0.99))
 {
     for(j in 1:nrow(th_lid))
@@ -113,12 +110,13 @@ for(i in c(0.95, 0.99))
 #=====
 #3
 #=====
-
-phi_th = th_lid[1][1]
-for(i in nrow(th_lid))
+phi_th = th_lid[1]
+m_list <- as.list(th_lid)
+print(m_list)
+print(paste("THLID = ", th_lid))
+for(i in seq_along(m_list))
 {
-    phi_th <- phi_th + i * x**(i + 1)
-    print(phi_th)
+# in every equation: i => i, t = > m_list[[i]]
 }
 
 #TODO
@@ -126,9 +124,7 @@ for(i in nrow(th_lid))
 #=====
 #4
 #=====
-#X11()
-#plot(1, 3)
-#Sys.sleep(Inf)
+
 
 #=====
 #5
