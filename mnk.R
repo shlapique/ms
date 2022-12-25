@@ -128,22 +128,47 @@ for(i in seq_along(m_list))
     print(real_phi_th)
 }
 q_975 <- qt(0.975, n - m_lid - 1)
-q_995 <- qt(0.975, n - m_lid - 1)
+q_995 <- qt(0.995, n - m_lid - 1)
 
 phi_th <- yac_str(paste0("Simplify(", phi_th, ")"))
 phi_th
 real_phi_th <-yac_str(paste0("Simplify(", real_phi_th, ")"))
 real_phi_th
-show <- yac_str(paste0("Plot2D(", phi_th, ", x=-4:4, y=-10:100)"))
-show
 
+s = m_lid + 1
+phi_x <- c()
+for(i in 1:s)
+{
+    phi_x <- c(phi_x, paste0("x^", i-1))
+    print(phi_x)
+}
+phi_x <- yac_str(paste0("Transpose(", ysym(matrix(phi_x)), ")"))
+phi_x_T <- yac_str(paste0("Transpose(", phi_x, ")"))
+phi_x
+phi_x_T
+XX <- ysym(alpha_s)
+sqrt_alpha_x <- yac_str(paste0("Sqrt(Simplify(", phi_x * XX * phi_x_T, "))"))
+sqrt_alpha_x
 
-#TODO
+# q for alpha = 0.95
+
+right_975 <- yac_str(paste0("Simplify(", phi_th, " + ", yac_str(paste0(norm_E_lid*q_975, " * ", sqrt_alpha_x)), " / ", yac_str(paste0("Sqrt(", n - s, ")")), ")"))
+left_975 <- yac_str(paste0("Simplify(", phi_th, " - ", yac_str(paste0(norm_E_lid*q_975, " * ", sqrt_alpha_x)), " / ", yac_str(paste0("Sqrt(", n - s, ")")), ")"))
+print(paste0(left_975, " < ", "real_phi_th", " < ", right_975))
+#
+# q for alpha = 0.95
+
+right_995 <- yac_str(paste0("Simplify(", phi_th, " + ", yac_str(paste0(norm_E_lid*q_995, " * ", sqrt_alpha_x)), " / ", yac_str(paste0("Sqrt(", n - s, ")")), ")"))
+left_995 <- yac_str(paste0("Simplify(", phi_th, " - ", yac_str(paste0(norm_E_lid*q_995, " * ", sqrt_alpha_x)), " / ", yac_str(paste0("Sqrt(", n - s, ")")), ")"))
+print(paste0(left_995, " < ", "real_phi_th", " < ", right_995))
+
 
 #=====
 #4
 #=====
 
+#show <- yac_str(paste0("Plot2D(", real_phi_th, ", x=-4:4, y=-10:100)"))
+show <- yac_str(paste0("Plot2D({", real_phi_th, " , ", phi_th, "})"))
 
 #=====
 #5
