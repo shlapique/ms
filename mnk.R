@@ -1,5 +1,5 @@
-library(tidyverse)
-library(caracas)
+library(Ryacas)
+library(ggplot2)
 
 check_device <- function()
 {
@@ -110,14 +110,33 @@ for(i in c(0.95, 0.99))
 #=====
 #3
 #=====
-phi_th = th_lid[1]
-m_list <- as.list(th_lid)
+phi_th <- as.character(th_lid[1])
+m_list <- as.list(th_lid[2:nrow(th_lid), 1])
 print(m_list)
-print(paste("THLID = ", th_lid))
 for(i in seq_along(m_list))
 {
-# in every equation: i => i, t = > m_list[[i]]
+    # in every equation: i => i, t = > m_list[[i]]
+    phi_th <- paste0(phi_th, " + ", as.character(m_list[[i]]), " * ", "x^", i)
+    print(phi_th)
 }
+
+real_phi_th <- as.character(theta[1])
+m_list <- as.list(theta[2:length(theta)])
+for(i in seq_along(m_list))
+{
+    real_phi_th <- paste0(real_phi_th, " + ", as.character(m_list[[i]]), " * ", "x^", i)
+    print(real_phi_th)
+}
+q_975 <- qt(0.975, n - m_lid - 1)
+q_995 <- qt(0.975, n - m_lid - 1)
+
+phi_th <- yac_str(paste0("Simplify(", phi_th, ")"))
+phi_th
+real_phi_th <-yac_str(paste0("Simplify(", real_phi_th, ")"))
+real_phi_th
+show <- yac_str(paste0("Plot2D(", phi_th, ", x=-4:4, y=-10:100)"))
+show
+
 
 #TODO
 
