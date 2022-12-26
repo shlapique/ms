@@ -22,6 +22,8 @@ fisher_criterion <- function(n, x, y_res)
         t_lid = th_lid[nrow(th_lid), 1] * sqrt(n - m_lid - 1) / (sqrt(al_1_1_s) * norm_E_lid)
         left_lid <- qt(.025/2, n - m_lid - 1)
         right_lid <- -qt(.025/2, n - m_lid - 1)
+        print(paste(left_lid, "<", t_lid, "<", right_lid))
+        print(th_lid)
         if((t_lid > left_lid) & (t_lid < right_lid))
         {
             print("INSIDE INTERVAL!")
@@ -39,15 +41,33 @@ fisher_criterion <- function(n, x, y_res)
 #0
 #=====
 
+# TRUE stands for normal
+# FALSE stands for uniform
+flag <- FALSE
+##########
+
 # define all variables
 n = 40
 disp = 2.5
 sigm = sqrt(disp) 
-m = 3
-theta = c((-1)^11 * 11, 5, 6, 0.06)
+m = 2
+if(flag == TRUE)
+{
+    theta = c((-1)^11 * 11, 5, 6, 0.06)
+} else
+{
+
+    theta = c((-1)^11 * 11, 5, 6)
+}
 
 # set error vector with normal distribution
-e <- rnorm(n, 0, sigm)
+if(flag == TRUE)
+{
+    e <- rnorm(n, 0, sigm)
+} else
+{
+    e <- runif(n, -3*sigm, 3*sigm)
+}
 
 
 # set up x's
@@ -61,10 +81,18 @@ x_2 <- x*x
 x_3 <- x_2*x 
 
 # put all vector and matricies in one expression
-data <- c(rep(1, n), x, x_2, x_3)
-x_main <- matrix(data, nrow=n, ncol=4)
+if(flag == TRUE)
+{
+    data <- c(rep(1, n), x, x_2, x_3)
+    x_main <- matrix(data, nrow=n, ncol=4)
+} else
+{
+    data <- c(rep(1, n), x, x_2)
+    x_main <- matrix(data, nrow=n, ncol=3)
+}
 y_res <- (x_main%*%theta) + e
 #y_res
+
 
 #=====
 #1
@@ -102,7 +130,7 @@ for(i in c(0.95, 0.99))
         #print(th[j][1] + (qt((1 - i) / 2, n - m - 1) * norm_E_lid) * sqrt(alpha[j, j]))
         l <- th_lid[j][1] + (qt((1 - i) / 2, n - m_lid - 1) * norm_E_lid * sqrt(alpha_s[j, j])) / sqrt(n - m_lid - 1)
         r <- th_lid[j][1] - (qt((1 - i) / 2, n - m_lid - 1) * norm_E_lid * sqrt(alpha_s[j, j])) / sqrt(n - m_lid - 1)
-        print(paste(l, ", theta=", theta[i], ", ", r))
+        print(paste(l, ", theta=", theta[j], ", ", r))
     }
     print("=============================================")
 }
@@ -167,8 +195,50 @@ print(paste0(left_995, " < ", "real_phi_th", " < ", right_995))
 #4
 #=====
 
-#show <- yac_str(paste0("Plot2D(", real_phi_th, ", x=-4:4, y=-10:100)"))
-show <- yac_str(paste0("Plot2D({", real_phi_th, " , ", phi_th, "})"))
+data_true <- data.frame("x" = x_main[1:nrow(x_main), 2], "useful" = x_main%*%theta)
+data_obs <- data.frame("x" = x_main[1:nrow(x_main), 2], "obs" = y_res)
+
+X11() 
+ggplot() + geom_line(data_true, mapping = aes(x=x, y=useful, colour="true useful signal")) + geom_line(data_obs, mapping = aes(x=x, y=obs, colour="observation")) + scale_colour_manual(values=c("observation"="red", "true useful signal"="blue"))
+check_device()
+
+x_main
+th_lid
+if(ncol(x_main) != nrow(th_lid))
+{
+    print("!!!!!!!!!!!!!!!!!!! M_LID > or < m")
+    stop()
+} else
+{
+    es_es <- x_main%*%th_lid
+}
+
+data_es <- data.frame("x" = x_main[1:nrow(x_main), 2], "es" = es_es)
+X11() 
+ggplot() + geom_line(data_true, mapping = aes(x=x, y=useful, colour="true useful signal")) + geom_line(data_es, mapping = aes(x=x, y=es, colour="estimate")) + scale_colour_manual(values=c("estimate"="orange", "true useful signal"="blue"))
+check_device()
+
+# alpha = 0.95
+print("ALPHAAAAA = 0.95")
+u <- theta[1]
+for(i in 2:s)
+{
+    u <- paste0(u, " + ", theta[i], " * ", "x^", i-1)
+}
+true_sign <- yac_str(paste0("Simplify(", u, ")"))
+show_g <- yac_str(paste0("Plot2D({", as_r(left_975), ", ", as_r(right_975), ", ", true_sign, "})"))
+#
+#
+#
+# alpha = 0.99
+print("ALPHAAAAA = 0.99")
+u <- theta[1]
+for(i in 2:s)
+{
+    u <- paste0(u, " + ", theta[i], " * ", "x^", i-1)
+}
+true_sign <- yac_str(paste0("Simplify(", u, ")"))
+show <- yac_str(paste0("Plot2D({", as_r(left_995), ", ", as_r(right_995), ", ", true_sign, "})"))
 
 #=====
 #5
@@ -206,7 +276,13 @@ p <- data.frame(tmp)
 
 # histogram + line of normal distribution 
 X11() 
-ggplot() + geom_histogram(data_hist, mapping = aes(E_lid, after_stat(density)), bins=l) + geom_line(p, mapping = aes(x, tmp))
+if(flag == TRUE)
+{
+    ggplot() + geom_histogram(data_hist, mapping = aes(E_lid, after_stat(density)), bins=l) + geom_line(p, mapping = aes(x, tmp))
+} else
+{
+    ggplot() + geom_histogram(data_hist, mapping = aes(E_lid, after_stat(density)), bins=l) 
+}
 check_device()
 
 #=====
@@ -237,7 +313,7 @@ for(p_lid in p_hist)
     summ <- summ + ((p_lid - p) ^ 2) / p
     i <- i + 1
 }
-print(summ * 40)
+print(summ * n)
 
 summ <- summ + pnorm(t_interval[1] / est_sigm)
 prob <- prob + pnorm(t_interval[1] / est_sigm)
